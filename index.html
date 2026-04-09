@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Селектор видеоданных</title>
+  <style>
+    :root {
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --bg: #FFFFFF;
+      --card-bg: #F5F5F5;
+      --text: #1A1A1A;
+      --muted: #666666;
+      --border: #E0E0E0;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      background: #fff;
+      border-bottom: 3px solid var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .logo-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.3px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+      padding: 20px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 960px) {
+      .main { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+    }
+
+    /* ── VIDEO SOURCE TABS ── */
+    .source-card { margin-bottom: 0; }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    .tab-panel { display: none; padding: 16px; }
+    .tab-panel.active { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    .file-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .file-label:hover { background: var(--accent-hover); }
+    .file-label input { display: none; }
+
+    .file-name {
+      font-size: 13px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .url-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .url-input:focus { border-color: var(--accent); }
+    .url-input::placeholder { color: #bbb; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+      border: 1.5px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-secondary:hover { background: #fff5f5; }
+
+    .btn-icon {
+      padding: 6px 10px;
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      min-width: 34px;
+    }
+    .btn-icon:hover { background: var(--border); }
+
+    .speed-btn {
+      padding: 5px 9px;
+      font-size: 12px;
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .speed-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ── VIDEO PLAYER ── */
+    .player-card {}
+
+    .video-wrapper {
+      background: #000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    #video {
+      width: 100%;
+      max-height: 500px;
+      display: block;
+    }
+
+    .video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .video-placeholder svg {
+      opacity: 0.3;
+    }
+
+    .video-placeholder-text {
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      padding: 12px 16px;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Progress bar */
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .time-label {
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      white-space: nowrap;
+      min-width: 60px;
+    }
+    .time-label.right { text-align: right; }
+
+    .seekbar-wrap {
+      flex: 1;
+      position: relative;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .seekbar-track {
+      position: absolute;
+      inset: 7px 0;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: visible;
+    }
+
+    .seekbar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      pointer-events: none;
+      transition: width 0.05s linear;
+      min-width: 0;
+    }
+
+    .segment-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    .segment-band {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: rgba(37, 99, 235, 0.25);
+      border: 1px solid rgba(37, 99, 235, 0.55);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .seekbar-thumb {
+      position: absolute;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      transition: left 0.05s linear;
+    }
+
+    /* Buttons row */
+    .buttons-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 3px;
+    }
+
+    .spacer { flex: 1; }
+
+    /* Frame counter */
+    .frame-row {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .frame-counter {
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── ANNOTATION PANEL ── */
+    .annotation-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .new-fragment-card .card-body {
+      padding: 14px 16px;
+    }
+
+    .frame-markers {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .marker-btn {
+      flex: 1;
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .marker-display {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .marker-info {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+
+    .marker-info-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .marker-info-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .marker-info-value.unset { color: var(--muted); font-weight: 400; }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .tag-select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color 0.15s;
+      cursor: pointer;
+    }
+    .tag-select:focus { border-color: var(--accent); }
+
+    .add-btn { width: 100%; }
+
+    /* ── FRAGMENT LIST ── */
+    .fragment-list-card .card-body {
+      padding: 0;
+    }
+
+    .empty-state {
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 13px;
+    }
+
+    .fragment-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .fragment-table th {
+      background: var(--card-bg);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .fragment-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .fragment-table tr:last-child td { border-bottom: none; }
+    .fragment-table tr:hover td { background: #fff8f8; }
+
+    .fragment-table .tag-pill {
+      display: inline-block;
+      background: #eff6ff;
+      color: var(--accent);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 600;
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .action-btn {
+      padding: 3px 8px;
+      font-size: 12px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: inherit;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+
+    .action-btn.goto:hover { background: #e8f4ff; color: #0066cc; border-color: #0066cc; }
+    .action-btn.delete:hover { background: #fff0f0; color: #dc2626; border-color: #dc2626; }
+
+    /* ── EXPORT ── */
+    .export-card .card-body {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .fragment-count {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .fragment-count strong {
+      color: var(--text);
+      font-size: 22px;
+      display: block;
+      line-height: 1.1;
+    }
+
+    /* ── HOTKEYS HINT ── */
+    .hotkeys-hint {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+    }
+
+    .hotkeys-hint-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 8px;
+    }
+
+    .hotkeys-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      font-size: 12px;
+    }
+
+    kbd {
+      display: inline-block;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      white-space: nowrap;
+    }
+
+    .hotkeys-grid span { color: var(--muted); align-self: center; }
+
+    /* ── NOTIFICATION ── */
+    .notification {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .notification.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <span class="logo-icon">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="34" height="34" rx="7" fill="#2563EB"/>
+          <rect x="8" y="10" width="3" height="14" rx="1.5" fill="white"/>
+          <polygon points="14,10 14,24 26,17" fill="white"/>
+        </svg>
+      </span>
+      <span class="logo-title">Селектор видеоданных</span>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LEFT COLUMN: source + player -->
+    <div class="player-col">
+
+      <!-- Video source card -->
+      <div class="card source-card" style="margin-bottom:16px;">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('url')">По ссылке (URL)</button>
+          <button class="tab-btn" onclick="switchTab('local')">Локальный файл</button>
+        </div>
+        <div id="tab-url" class="tab-panel active">
+          <input type="text" class="url-input" id="url-input" placeholder="Вставьте прямую ссылку на видеофайл (mp4, webm)…">
+          <button class="btn btn-primary" onclick="loadFromUrl()">Загрузить</button>
+        </div>
+        <div id="tab-local" class="tab-panel">
+          <label class="file-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Выбрать файл
+            <input type="file" id="file-input" accept="video/mp4,video/webm,video/ogg,video/mov">
+          </label>
+          <span class="file-name" id="file-name">Файл не выбран</span>
+        </div>
+      </div>
+
+      <!-- Player card -->
+      <div class="card player-card">
+        <div class="video-wrapper">
+          <video id="video" preload="metadata"></video>
+          <div class="video-placeholder" id="placeholder">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><polyline points="8 21 12 17 16 21"/>
+            </svg>
+            <span class="video-placeholder-text">Загрузите видеофайл для начала работы</span>
+          </div>
+        </div>
+
+        <div class="controls">
+
+          <!-- Progress bar -->
+          <div class="progress-row">
+            <span class="time-label" id="time-current">00:00:00</span>
+            <div class="seekbar-wrap" id="seekbar-wrap">
+              <div class="seekbar-track">
+                <div class="seekbar-fill" id="seekbar-fill" style="width:0%"></div>
+                <div class="segment-overlay" id="segment-overlay"></div>
+              </div>
+              <div class="seekbar-thumb" id="seekbar-thumb" style="left:0%"></div>
+            </div>
+            <span class="time-label right" id="time-total">00:00:00</span>
+          </div>
+
+          <!-- Buttons -->
+          <div class="buttons-row">
+            <button class="btn-icon" onclick="seekToStart()" title="К началу">⏮</button>
+            <button class="btn-icon" onclick="skipSeconds(-10)" title="-10 сек">⏪</button>
+            <button class="btn-icon" onclick="seekFrames(-1)" title="-1 кадр (←)">◀</button>
+            <button class="btn-icon" id="play-btn" onclick="togglePlay()" title="Play/Pause (Пробел)" style="min-width:44px; font-size:15px;">▶</button>
+            <button class="btn-icon" onclick="seekFrames(1)" title="+1 кадр (→)">▶</button>
+            <button class="btn-icon" onclick="skipSeconds(10)" title="+10 сек">⏩</button>
+
+            <div class="spacer"></div>
+
+            <div class="btn-group" id="speed-buttons">
+              <button class="speed-btn" data-speed="0.25" onclick="setSpeed(0.25)">0.25×</button>
+              <button class="speed-btn" data-speed="0.5" onclick="setSpeed(0.5)">0.5×</button>
+              <button class="speed-btn active" data-speed="1" onclick="setSpeed(1)">1×</button>
+              <button class="speed-btn" data-speed="2" onclick="setSpeed(2)">2×</button>
+            </div>
+          </div>
+
+          <!-- Frame counter -->
+          <div class="frame-row">
+            <span>Кадр:</span>
+            <span class="frame-counter" id="frame-counter">0 / 0</span>
+            <span style="margin-left:8px; color:#bbb;">|</span>
+            <span style="margin-left:8px;">FPS: 25</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: annotation -->
+    <div class="annotation-col">
+
+      <!-- New fragment -->
+      <div class="card new-fragment-card">
+        <div class="card-title">Новый фрагмент</div>
+        <div class="card-body">
+          <div class="frame-markers">
+            <button class="btn btn-primary marker-btn" onclick="setStart()" title="Горячая клавиша: [">[ Начало</button>
+            <button class="btn btn-primary marker-btn" onclick="setEnd()" title="Горячая клавиша: ]">] Конец</button>
+          </div>
+
+          <div class="marker-display">
+            <div class="marker-info">
+              <div class="marker-info-label">Начало</div>
+              <div class="marker-info-value unset" id="start-display">—</div>
+            </div>
+            <div class="marker-info">
+              <div class="marker-info-label">Конец</div>
+              <div class="marker-info-value unset" id="end-display">—</div>
+            </div>
+          </div>
+
+          <div class="field-label">Тег</div>
+          <select class="tag-select" id="tag-select" onchange="updateAddBtn()">
+            <option value="">— Выберите тег —</option>
+            <option value="wrong_detection">Ошибка детекции</option>
+            <option value="occlusion">Перекрытие объекта</option>
+            <option value="blur">Размытие / засветка</option>
+            <option value="edge_case">Граничный случай</option>
+            <option value="other">Другое</option>
+          </select>
+
+          <button class="btn btn-primary add-btn" id="add-btn" onclick="addFragment()" disabled>Добавить фрагмент</button>
+        </div>
+      </div>
+
+      <!-- Fragment list -->
+      <div class="card fragment-list-card">
+        <div class="card-title">Фрагменты</div>
+        <div class="card-body" id="fragment-list-body">
+          <div class="empty-state" id="empty-state">Фрагменты не размечены</div>
+          <table class="fragment-table" id="fragment-table" style="display:none;">
+            <thead>
+              <tr>
+                <th>№</th>
+                <th>Начало</th>
+                <th>Конец</th>
+                <th>Тег</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="fragment-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="card export-card">
+        <div class="card-title">Экспорт</div>
+        <div class="card-body">
+          <div class="fragment-count">
+            Размечено фрагментов
+            <strong id="fragment-count">0</strong>
+          </div>
+          <button class="btn btn-secondary" onclick="exportJson()">⬇ Экспорт JSON</button>
+        </div>
+      </div>
+
+      <!-- Hotkeys -->
+      <div class="hotkeys-hint">
+        <div class="hotkeys-hint-title">Горячие клавиши</div>
+        <div class="hotkeys-grid">
+          <kbd>Пробел</kbd><span>Play / Pause</span>
+          <kbd>←</kbd><span>−1 кадр</span>
+          <kbd>→</kbd><span>+1 кадр</span>
+          <kbd>[</kbd><span>Установить начало</span>
+          <kbd>]</kbd><span>Установить конец</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification toast -->
+  <div class="notification" id="notification"></div>
+
+  <script>
+    const FPS = 25;
+
+    const video = document.getElementById('video');
+    const placeholder = document.getElementById('placeholder');
+    const seekbarWrap = document.getElementById('seekbar-wrap');
+    const seekbarFill = document.getElementById('seekbar-fill');
+    const seekbarThumb = document.getElementById('seekbar-thumb');
+    const segmentOverlay = document.getElementById('segment-overlay');
+    const timeCurrent = document.getElementById('time-current');
+    const timeTotal = document.getElementById('time-total');
+    const frameCounter = document.getElementById('frame-counter');
+    const playBtn = document.getElementById('play-btn');
+    const startDisplay = document.getElementById('start-display');
+    const endDisplay = document.getElementById('end-display');
+    const addBtn = document.getElementById('add-btn');
+    const tagSelect = document.getElementById('tag-select');
+    const fragmentTbody = document.getElementById('fragment-tbody');
+    const fragmentTable = document.getElementById('fragment-table');
+    const emptyState = document.getElementById('empty-state');
+    const fragmentCountEl = document.getElementById('fragment-count');
+
+    let startFrame = null;
+    let endFrame = null;
+    let fragments = [];
+    let isSeeking = false;
+
+    // ── TABS ──
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', (i === 0 && tab === 'url') || (i === 1 && tab === 'local'));
+      });
+      document.getElementById('tab-local').classList.toggle('active', tab === 'local');
+      document.getElementById('tab-url').classList.toggle('active', tab === 'url');
+    }
+
+    // ── FILE INPUT ──
+    document.getElementById('file-input').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      document.getElementById('file-name').textContent = file.name;
+      loadVideo(URL.createObjectURL(file));
+    });
+
+    // ── URL LOAD ──
+    function loadFromUrl() {
+      const url = document.getElementById('url-input').value.trim();
+      if (!url) { notify('Введите ссылку на видео'); return; }
+      loadVideo(url);
+    }
+
+    function loadVideo(src) {
+      video.src = src;
+      placeholder.style.display = 'none';
+      video.load();
+      video.addEventListener('loadedmetadata', onMetaLoaded, { once: true });
+      notify('Видео загружается…');
+    }
+
+    function onMetaLoaded() {
+      updateTime();
+      updateFrameCounter();
+      timeTotal.textContent = formatTime(video.duration);
+      frameCounter.textContent = `0 / ${Math.round(video.duration * FPS)}`;
+      notify('Видео загружено');
+    }
+
+    // ── TIME / FRAME UTILS ──
+    function formatTime(s) {
+      if (!isFinite(s)) return '00:00:00';
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = Math.floor(s % 60);
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+
+    function currentFrame() {
+      return Math.round(video.currentTime * FPS);
+    }
+
+    function totalFrames() {
+      return isFinite(video.duration) ? Math.round(video.duration * FPS) : 0;
+    }
+
+    function seekToFrame(frame) {
+      const total = totalFrames();
+      if (!total) return;
+      const clamped = Math.max(0, Math.min(frame, total));
+      video.currentTime = clamped / FPS;
+    }
+
+    // ── PLAYBACK ──
+    function togglePlay() {
+      if (!video.src) return;
+      video.paused ? video.play() : video.pause();
+    }
+
+    function seekToStart() {
+      video.currentTime = 0;
+    }
+
+    function skipSeconds(s) {
+      video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + s));
+    }
+
+    function seekFrames(n) {
+      seekToFrame(currentFrame() + n);
+    }
+
+    function setSpeed(s) {
+      video.playbackRate = s;
+      document.querySelectorAll('.speed-btn').forEach(b => {
+        b.classList.toggle('active', parseFloat(b.dataset.speed) === s);
+      });
+    }
+
+    // ── VIDEO EVENTS ──
+    video.addEventListener('play', () => { playBtn.textContent = '⏸'; });
+    video.addEventListener('pause', () => { playBtn.textContent = '▶'; });
+    video.addEventListener('ended', () => { playBtn.textContent = '▶'; });
+
+    video.addEventListener('timeupdate', () => {
+      if (!isSeeking) updateTime();
+    });
+
+    function updateTime() {
+      const t = video.currentTime;
+      const dur = video.duration || 0;
+      timeCurrent.textContent = formatTime(t);
+      const pct = dur ? (t / dur) * 100 : 0;
+      seekbarFill.style.width = pct + '%';
+      seekbarThumb.style.left = pct + '%';
+      updateFrameCounter();
+    }
+
+    function updateFrameCounter() {
+      frameCounter.textContent = `${currentFrame()} / ${totalFrames()}`;
+    }
+
+    // ── SEEKBAR INTERACTION ──
+    function seekFromEvent(e) {
+      const rect = seekbarWrap.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const clamped = Math.max(0, Math.min(1, x));
+      if (isFinite(video.duration)) {
+        video.currentTime = clamped * video.duration;
+      }
+    }
+
+    seekbarWrap.addEventListener('mousedown', e => {
+      isSeeking = true;
+      seekFromEvent(e);
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (isSeeking) seekFromEvent(e);
+    });
+
+    document.addEventListener('mouseup', () => {
+      isSeeking = false;
+    });
+
+    // ── ANNOTATION ──
+    function setStart() {
+      if (!video.src) return;
+      startFrame = currentFrame();
+      startDisplay.textContent = `кадр ${startFrame}`;
+      startDisplay.classList.remove('unset');
+      updateAddBtn();
+      renderSegmentPreview();
+      notify(`Начало: кадр ${startFrame}`);
+    }
+
+    function setEnd() {
+      if (!video.src) return;
+      endFrame = currentFrame();
+      endDisplay.textContent = `кадр ${endFrame}`;
+      endDisplay.classList.remove('unset');
+      updateAddBtn();
+      renderSegmentPreview();
+      notify(`Конец: кадр ${endFrame}`);
+    }
+
+    function updateAddBtn() {
+      const valid = startFrame !== null && endFrame !== null && tagSelect.value !== '';
+      addBtn.disabled = !valid;
+    }
+
+    function addFragment() {
+      if (startFrame === null || endFrame === null || !tagSelect.value) return;
+
+      const s = Math.min(startFrame, endFrame);
+      const e = Math.max(startFrame, endFrame);
+
+      if (s === e) { notify('Начало и конец не должны совпадать'); return; }
+
+      const fps = FPS;
+      fragments.push({
+        start_frame: s,
+        end_frame: e,
+        tag: tagSelect.value,
+        start_time_sec: parseFloat((s / fps).toFixed(3)),
+        end_time_sec: parseFloat((e / fps).toFixed(3))
+      });
+
+      // Reset
+      startFrame = null;
+      endFrame = null;
+      startDisplay.textContent = '—';
+      startDisplay.classList.add('unset');
+      endDisplay.textContent = '—';
+      endDisplay.classList.add('unset');
+      tagSelect.value = '';
+      addBtn.disabled = true;
+
+      renderFragmentList();
+      renderSegmentOverlay();
+      notify('Фрагмент добавлен');
+    }
+
+    function removeFragment(idx) {
+      fragments.splice(idx, 1);
+      renderFragmentList();
+      renderSegmentOverlay();
+    }
+
+    function gotoFragment(idx) {
+      seekToFrame(fragments[idx].start_frame);
+    }
+
+    const TAG_LABELS = {
+      wrong_detection: 'Ошибка детекции',
+      occlusion:       'Перекрытие объекта',
+      blur:            'Размытие / засветка',
+      edge_case:       'Граничный случай',
+      other:           'Другое'
+    };
+
+    function renderFragmentList() {
+      fragmentCountEl.textContent = fragments.length;
+      if (fragments.length === 0) {
+        emptyState.style.display = '';
+        fragmentTable.style.display = 'none';
+        return;
+      }
+      emptyState.style.display = 'none';
+      fragmentTable.style.display = '';
+
+      fragmentTbody.innerHTML = '';
+      fragments.forEach((f, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${f.start_frame}</td>
+          <td>${f.end_frame}</td>
+          <td><span class="tag-pill" title="${f.tag}">${TAG_LABELS[f.tag] || f.tag}</span></td>
+          <td><button class="action-btn goto" onclick="gotoFragment(${i})" title="Перейти к началу">→</button></td>
+          <td><button class="action-btn delete" onclick="removeFragment(${i})" title="Удалить">✕</button></td>
+        `;
+        fragmentTbody.appendChild(tr);
+      });
+    }
+
+    // ── SEGMENT OVERLAY ON SEEKBAR ──
+    function renderSegmentOverlay() {
+      segmentOverlay.innerHTML = '';
+      const total = totalFrames();
+      if (!total) return;
+
+      fragments.forEach(f => {
+        const left = (f.start_frame / total) * 100;
+        const width = ((f.end_frame - f.start_frame) / total) * 100;
+        const band = document.createElement('div');
+        band.className = 'segment-band';
+        band.style.left = left + '%';
+        band.style.width = Math.max(0.3, width) + '%';
+        band.title = `${f.tag}: ${f.start_frame}–${f.end_frame}`;
+        segmentOverlay.appendChild(band);
+      });
+    }
+
+    // Show pending segment preview (before adding)
+    function renderSegmentPreview() {
+      renderSegmentOverlay();
+      const total = totalFrames();
+      if (!total || startFrame === null || endFrame === null) return;
+
+      const s = Math.min(startFrame, endFrame);
+      const e = Math.max(startFrame, endFrame);
+      const left = (s / total) * 100;
+      const width = ((e - s) / total) * 100;
+
+      const band = document.createElement('div');
+      band.className = 'segment-band';
+      band.style.left = left + '%';
+      band.style.width = Math.max(0.3, width) + '%';
+      band.style.background = 'rgba(37,99,235,0.12)';
+      band.style.borderStyle = 'dashed';
+      segmentOverlay.appendChild(band);
+    }
+
+    // Re-render overlay when video duration known
+    video.addEventListener('loadedmetadata', renderSegmentOverlay);
+
+    // ── EXPORT ──
+    function exportJson() {
+      if (fragments.length === 0) { notify('Нет фрагментов для экспорта'); return; }
+      const json = JSON.stringify(fragments, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'manifest.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      notify('manifest.json скачан');
+    }
+
+    // ── HOTKEYS ──
+    document.addEventListener('keydown', e => {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          seekFrames(-1);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          seekFrames(1);
+          break;
+        case 'BracketLeft':
+          setStart();
+          break;
+        case 'BracketRight':
+          setEnd();
+          break;
+      }
+    });
+
+    // ── NOTIFICATION ──
+    let notifTimer = null;
+    function notify(msg) {
+      const el = document.getElementById('notification');
+      el.textContent = msg;
+      el.classList.add('show');
+      if (notifTimer) clearTimeout(notifTimer);
+      notifTimer = setTimeout(() => el.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>
