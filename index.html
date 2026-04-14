@@ -590,6 +590,65 @@
 
     .hotkeys-grid span { color: var(--muted); align-self: center; }
 
+    /* ── FPS SELECT ── */
+    .fps-select {
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+    .fps-select:focus { border-color: var(--accent); }
+
+    /* ── SESSION BANNER ── */
+    .session-banner {
+      background: #eff6ff;
+      border: 1px solid rgba(37,99,235,0.3);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 24px 0;
+      font-size: 13px;
+    }
+    .session-banner-text { flex: 1; color: var(--text); }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 14px 16px;
+    }
+    .stat-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+    .stat-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-count { font-size: 18px; font-weight: 700; color: var(--accent); line-height: 1; }
+    .stat-duration { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* editing row */
+    .fragment-table tr.editing td { background: #fffbeb; }
+    .action-btn.edit:hover { background: #f0fdf4; color: #16a34a; border-color: #16a34a; }
+
     /* ── NOTIFICATION ── */
     .notification {
       position: fixed;
@@ -615,6 +674,13 @@
   </style>
 </head>
 <body>
+
+  <!-- Session restore banner -->
+  <div class="session-banner" id="session-banner" style="display:none">
+    <div class="session-banner-text" id="session-banner-text"></div>
+    <button class="btn btn-primary" onclick="restoreSession()" style="padding:5px 12px;font-size:12px;">Восстановить</button>
+    <button class="btn btn-secondary" onclick="dismissSession()" style="padding:5px 12px;font-size:12px;">Отклонить</button>
+  </div>
 
   <!-- HEADER -->
   <header>
@@ -707,7 +773,16 @@
             <span>Кадр:</span>
             <span class="frame-counter" id="frame-counter">0 / 0</span>
             <span style="margin-left:8px; color:#bbb;">|</span>
-            <span style="margin-left:8px;">FPS: 25</span>
+            <span style="margin-left:8px;">FPS:</span>
+            <select class="fps-select" id="fps-select" onchange="setFps(this.value)">
+              <option value="23.976">23.976</option>
+              <option value="24">24</option>
+              <option value="25" selected>25</option>
+              <option value="29.97">29.97</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="60">60</option>
+            </select>
           </div>
 
         </div>
@@ -749,6 +824,7 @@
           </select>
 
           <button class="btn btn-primary add-btn" id="add-btn" onclick="addFragment()" disabled>Добавить фрагмент</button>
+          <button class="btn btn-secondary add-btn" id="cancel-btn" onclick="cancelEdit()" style="display:none;margin-top:8px;">Отмена</button>
         </div>
       </div>
 
@@ -766,6 +842,7 @@
                 <th>Тег</th>
                 <th></th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="fragment-tbody"></tbody>
@@ -781,8 +858,18 @@
             Размечено фрагментов
             <strong id="fragment-count">0</strong>
           </div>
-          <button class="btn btn-secondary" onclick="exportJson()">⬇ Экспорт JSON</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="exportJson()">⬇ Экспорт JSON</button>
+            <button class="btn btn-secondary" onclick="triggerImport()">⬆ Импорт JSON</button>
+            <input type="file" id="import-input" accept=".json" style="display:none" onchange="importJson(this)">
+          </div>
         </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="card" id="stats-card" style="display:none">
+        <div class="card-title">Статистика по тегам</div>
+        <div class="stats-grid" id="stats-grid"></div>
       </div>
 
       <!-- Hotkeys -->
@@ -804,8 +891,9 @@
   <div class="notification" id="notification"></div>
 
   <script>
-    const FPS = 25;
+    let fps = 25;
 
+    const cancelBtnEl = document.getElementById('cancel-btn');
     const video = document.getElementById('video');
     const placeholder = document.getElementById('placeholder');
     const seekbarWrap = document.getElementById('seekbar-wrap');
@@ -829,6 +917,7 @@
     let endFrame = null;
     let fragments = [];
     let isSeeking = false;
+    let editingIdx = null;
 
     // ── TABS ──
     function switchTab(tab) {
@@ -866,7 +955,7 @@
       updateTime();
       updateFrameCounter();
       timeTotal.textContent = formatTime(video.duration);
-      frameCounter.textContent = `0 / ${Math.round(video.duration * FPS)}`;
+      frameCounter.textContent = `0 / ${Math.round(video.duration * fps)}`;
       notify('Видео загружено');
     }
 
@@ -880,18 +969,18 @@
     }
 
     function currentFrame() {
-      return Math.round(video.currentTime * FPS);
+      return Math.round(video.currentTime * fps);
     }
 
     function totalFrames() {
-      return isFinite(video.duration) ? Math.round(video.duration * FPS) : 0;
+      return isFinite(video.duration) ? Math.round(video.duration * fps) : 0;
     }
 
     function seekToFrame(frame) {
       const total = totalFrames();
       if (!total) return;
       const clamped = Math.max(0, Math.min(frame, total));
-      video.currentTime = clamped / FPS;
+      video.currentTime = clamped / fps;
     }
 
     // ── PLAYBACK ──
@@ -999,34 +1088,43 @@
 
       if (s === e) { notify('Начало и конец не должны совпадать'); return; }
 
-      const fps = FPS;
-      fragments.push({
+      const overlaps = checkOverlap(s, e);
+      if (overlaps.length > 0) notify(`Внимание: пересечение с фрагментом №${overlaps[0]}`);
+
+      const fragment = {
         start_frame: s,
         end_frame: e,
         tag: tagSelect.value,
         start_time_sec: parseFloat((s / fps).toFixed(3)),
         end_time_sec: parseFloat((e / fps).toFixed(3))
-      });
+      };
 
-      // Reset
-      startFrame = null;
-      endFrame = null;
-      startDisplay.textContent = '—';
-      startDisplay.classList.add('unset');
-      endDisplay.textContent = '—';
-      endDisplay.classList.add('unset');
-      tagSelect.value = '';
-      addBtn.disabled = true;
+      const wasEditing = editingIdx !== null;
+      if (wasEditing) {
+        fragments[editingIdx] = fragment;
+        editingIdx = null;
+        addBtn.textContent = 'Добавить фрагмент';
+        cancelBtnEl.style.display = 'none';
+      } else {
+        fragments.push(fragment);
+      }
 
+      resetForm();
       renderFragmentList();
       renderSegmentOverlay();
-      notify('Фрагмент добавлен');
+      renderStats();
+      saveSession();
+      notify(wasEditing ? 'Фрагмент обновлён' : 'Фрагмент добавлен');
     }
 
     function removeFragment(idx) {
+      if (editingIdx === idx) cancelEdit();
+      else if (editingIdx !== null && idx < editingIdx) editingIdx--;
       fragments.splice(idx, 1);
       renderFragmentList();
       renderSegmentOverlay();
+      renderStats();
+      saveSession();
     }
 
     function gotoFragment(idx) {
@@ -1054,12 +1152,14 @@
       fragmentTbody.innerHTML = '';
       fragments.forEach((f, i) => {
         const tr = document.createElement('tr');
+        if (i === editingIdx) tr.classList.add('editing');
         tr.innerHTML = `
           <td>${i + 1}</td>
           <td>${f.start_frame}</td>
           <td>${f.end_frame}</td>
           <td><span class="tag-pill" title="${f.tag}">${TAG_LABELS[f.tag] || f.tag}</span></td>
           <td><button class="action-btn goto" onclick="gotoFragment(${i})" title="Перейти к началу">→</button></td>
+          <td><button class="action-btn edit" onclick="editFragment(${i})" title="Редактировать">✎</button></td>
           <td><button class="action-btn delete" onclick="removeFragment(${i})" title="Удалить">✕</button></td>
         `;
         fragmentTbody.appendChild(tr);
@@ -1147,8 +1247,162 @@
         case 'BracketRight':
           setEnd();
           break;
+        case 'Enter':
+          if (!addBtn.disabled) addFragment();
+          break;
       }
     });
+
+    // ── INIT ──
+    checkForSavedSession();
+
+    // ── FPS ──
+    function setFps(val) {
+      fps = parseFloat(val);
+      updateFrameCounter();
+    }
+
+    // ── RESET FORM ──
+    function resetForm() {
+      startFrame = null;
+      endFrame = null;
+      startDisplay.textContent = '—';
+      startDisplay.classList.add('unset');
+      endDisplay.textContent = '—';
+      endDisplay.classList.add('unset');
+      tagSelect.value = '';
+      addBtn.disabled = true;
+    }
+
+    // ── EDIT FRAGMENT ──
+    function editFragment(idx) {
+      const f = fragments[idx];
+      editingIdx = idx;
+      startFrame = f.start_frame;
+      endFrame = f.end_frame;
+      startDisplay.textContent = `кадр ${startFrame}`;
+      startDisplay.classList.remove('unset');
+      endDisplay.textContent = `кадр ${endFrame}`;
+      endDisplay.classList.remove('unset');
+      tagSelect.value = f.tag;
+      addBtn.disabled = false;
+      addBtn.textContent = 'Сохранить изменения';
+      cancelBtnEl.style.display = '';
+      renderFragmentList();
+      renderSegmentPreview();
+      document.querySelector('.new-fragment-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function cancelEdit() {
+      editingIdx = null;
+      addBtn.textContent = 'Добавить фрагмент';
+      cancelBtnEl.style.display = 'none';
+      resetForm();
+      renderFragmentList();
+      renderSegmentOverlay();
+    }
+
+    // ── OVERLAP CHECK ──
+    function checkOverlap(s, e) {
+      return fragments.reduce((acc, f, i) => {
+        if (i === editingIdx) return acc;
+        if (s < f.end_frame && e > f.start_frame) acc.push(i + 1);
+        return acc;
+      }, []);
+    }
+
+    // ── LOCALSTORAGE ──
+    const SESSION_KEY = 'vat_session';
+
+    function saveSession() {
+      try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ fragments, savedAt: Date.now() }));
+      } catch(e) {}
+    }
+
+    function checkForSavedSession() {
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!data.fragments || data.fragments.length === 0) return;
+        const date = new Date(data.savedAt).toLocaleString('ru');
+        document.getElementById('session-banner-text').textContent =
+          `Найдена сохранённая сессия: ${data.fragments.length} фрагм., ${date}`;
+        document.getElementById('session-banner').style.display = 'flex';
+      } catch(e) {}
+    }
+
+    function restoreSession() {
+      try {
+        const data = JSON.parse(localStorage.getItem(SESSION_KEY));
+        fragments = data.fragments;
+        renderFragmentList();
+        renderSegmentOverlay();
+        renderStats();
+        document.getElementById('session-banner').style.display = 'none';
+        notify(`Восстановлено ${fragments.length} фрагментов`);
+      } catch(e) { notify('Не удалось восстановить сессию'); }
+    }
+
+    function dismissSession() {
+      localStorage.removeItem(SESSION_KEY);
+      document.getElementById('session-banner').style.display = 'none';
+    }
+
+    // ── IMPORT JSON ──
+    function triggerImport() {
+      document.getElementById('import-input').click();
+    }
+
+    function importJson(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!Array.isArray(data)) throw new Error();
+          if (fragments.length > 0 && !confirm(`Заменить ${fragments.length} текущих фрагментов импортированными (${data.length} шт.)?`)) {
+            input.value = '';
+            return;
+          }
+          fragments = data;
+          renderFragmentList();
+          renderSegmentOverlay();
+          renderStats();
+          saveSession();
+          notify(`Импортировано ${fragments.length} фрагментов`);
+        } catch(err) {
+          notify('Ошибка: неверный формат JSON');
+        }
+        input.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    // ── STATS ──
+    function renderStats() {
+      const card = document.getElementById('stats-card');
+      const grid = document.getElementById('stats-grid');
+      if (fragments.length === 0) { card.style.display = 'none'; return; }
+
+      const map = {};
+      fragments.forEach(f => {
+        if (!map[f.tag]) map[f.tag] = { count: 0, dur: 0 };
+        map[f.tag].count++;
+        map[f.tag].dur += (f.end_time_sec - f.start_time_sec);
+      });
+
+      grid.innerHTML = Object.entries(map).map(([tag, s]) =>
+        `<div class="stat-item">
+          <div class="stat-tag">${TAG_LABELS[tag] || tag}</div>
+          <div class="stat-count">${s.count}</div>
+          <div class="stat-duration">${s.dur.toFixed(1)} сек</div>
+        </div>`
+      ).join('');
+      card.style.display = '';
+    }
 
     // ── NOTIFICATION ──
     let notifTimer = null;
