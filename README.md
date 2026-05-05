@@ -4,6 +4,8 @@ A self-contained, browser-based tool for frame-accurate video segment annotation
 
 Designed for workflows where an operator watches a video, marks problem segments, assigns labels, and exports structured metadata for downstream processing.
 
+![Video Annotation Tool](assets/02_video_annotation.png)
+
 ---
 
 ## Features
